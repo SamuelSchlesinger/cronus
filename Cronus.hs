@@ -1,12 +1,34 @@
 {-# LANGUAGE NoImplicitPrelude #-}
+{- |
+Name: Cronus
+
+This module is the big hammer of alternatives to the standard Prelude.
+It is meant to optimize compatibility with the standard Prelude and the
+various packages which are built on top of it, while exposing types and
+functions that I want available to me in the vast majority of "real world
+applications."
+-}
 module Cronus
-( Bool(True, False)
+( 
+--  ** Bool
+  Bool(True, False)
 , (&&), (||), not, otherwise
+-- ** Maybe
 , Maybe(Just, Nothing)
 , maybe
-, Either(Left, Right)
-, either
+, catMaybes
+, mapMaybe
+, listToMaybe
+, maybeToList
+, fromMaybe
+, isNothing
+, isJust
+-- ** Eq
+, Eq(..)
+-- ** Ord
 , Ordering(LT, EQ, GT)
+, Ord(..)
+-- ** Char
 , Char
 , isControl
 , isSpace
@@ -30,13 +52,21 @@ module Cronus
 , isAsciiLower
 , ord
 , chr
+-- ** Convenience Functions
 , fst, snd
 , curry
 , uncurry
-, Eq(..)
-, Ord(..)
+, on
+, flip
+, const
+, until
+, (&)
+, ($)
+-- ** Enum
 , Enum(..)
+-- ** Bounded
 , Bounded(..)
+-- ** Numeric Types
 , Int
 , Int8, Int16, Int32, Int64
 , Integer
@@ -45,6 +75,7 @@ module Cronus
 , Double
 , Word
 , Word8, Word16, Word32, Word64
+-- ** The Numeric Hierarchy
 , Rational
 , Num(..), subtract
 , Real(toRational)
@@ -53,6 +84,7 @@ module Cronus
 , Floating(..)
 , RealFrac(..)
 , RealFloat(..)
+-- ** Functions on Numbers
 , even
 , odd
 , gcd
@@ -61,12 +93,28 @@ module Cronus
 , (^^)
 , fromIntegral
 , realToFrac
+-- ** Show
 , Show(..)
+-- ** Read
 , Read(..)
 , readMaybe
+-- ** Semigroup
 , Semigroup(..)
+-- ** Monoid
 , Monoid(..)
+-- ** Functor
 , Functor(..)
+, (<$>)
+, void
+-- ** Applicative
+, Applicative(..)
+, Alternative(..)
+, ZipList(..)
+, (<**>)
+, liftA
+, liftA3
+, optional
+-- ** Monad
 , Monad(..)
 , mfilter
 , mapAndUnzipM
@@ -86,33 +134,46 @@ module Cronus
 , liftM5
 , ap 
 , (<$!>)
-, Applicative(..)
-, ZipList(..)
-, (<**>)
-, liftA
-, liftA3
-, optional
-, Alternative(..)
 , MonadPlus(..)
 , MonadFail(..)
 , mapM_
 , sequence_
 , (=<<)
+, Kleisli(..)
+-- ** Foldable
 , Foldable(..)
+, foldrM
+, foldlM
+, for_
+, for
+, maximumBy
+, minimumBy
+, find
+, msum
+-- ** Traversable
 , Traversable(..)
-, (<$>)
+, traverse_
+, sequenceA_
+, asum
+, forM_
+, forM
+, mapAccumL
+, mapAccumR
+-- ** Category
 , Category(..)
-, (&)
-, ($)
-, on
-, flip
-, const
-, until
+, (>>>)
+, (<<<)
+-- ** error and undefined
 , error
 , undefined
+-- ** Strictness
 , seq
 , ($!)
-, (++)
+, deepseq
+, ($!!)
+, force
+, NFData(..)
+-- ** List Functions
 , reverse
 , and
 , or
@@ -141,24 +202,19 @@ module Cronus
 , zipWith3
 , unzip
 , unzip3
+-- ** IO
 , IO
+-- ** ST
 , ST
 , runST
+, STRef
+, newSTRef
+, writeSTRef
+, modifySTRef
+, modifySTRef'
+-- ** Exceptions
 , throwIO
 , SomeException
-, Typeable(..)
-, typeOf
-, typeRep
-, TypeRep
-, Proxy(Proxy)
-, (:~:)(Refl)
-, (:~~:)(HRefl)
-, cast
-, eqT
-, gcast
-, gcast1
-, gcast2
-, typeRepFingerprint
 , Exception(..)
 , catch
 , ArithException(..)
@@ -208,6 +264,22 @@ module Cronus
 , bracketOnError
 , finally
 , onException
+-- ** Typeable
+, Typeable(..)
+, typeOf
+, typeRep
+, TypeRep
+, (:~:)(Refl)
+, (:~~:)(HRefl)
+, cast
+, eqT
+, gcast
+, gcast1
+, gcast2
+, typeRepFingerprint
+-- ** Proxy
+, Proxy(Proxy)
+-- ** Concurrency
 , forkIO
 , ThreadId
 , myThreadId
@@ -261,12 +333,11 @@ module Cronus
 , runInBoundThread
 , runInUnboundThread
 , mkWeakThreadId
-, deepseq
-, ($!!)
-, force
-, NFData(..)
+-- ** ByteString
 , ByteString
+-- ** Text
 , Text
+-- ** Ordered Containers
 , Graph
 , IntMap
 , Map
@@ -274,11 +345,15 @@ module Cronus
 , Seq
 , IntSet
 , Tree
+-- ** Unordered Containers
 , Hashable(..)
 , HashMap
 , HashSet
-, MonadTrans(lift)
-, MonadIO(liftIO)
+-- ** MonadTrans
+, MonadTrans(..)
+-- ** MonadIO
+, MonadIO(..)
+-- ** Reader
 , ReaderT(..)
 , MonadReader(..)
 , asks
@@ -286,12 +361,14 @@ module Cronus
 , runReader
 , mapReader
 , withReader
+-- ** State
 , StateT(..)
 , MonadState(..)
 , State
 , modify
 , modify'
 , gets
+-- ** CPSed Writer
 , WriterT(..)
 , MonadWriter(..)
 , listens
@@ -302,10 +379,12 @@ module Cronus
 , mapWriter
 , execWriterT
 , mapWriterT
+-- ** MaybeT
 , MaybeT(..)
 , mapMaybeT
 , maybeToExceptT
 , exceptToMaybeT
+-- ** ExceptT
 , ExceptT(..)
 , Except
 , except
@@ -316,6 +395,7 @@ module Cronus
 , withExceptT
 , throwE
 , catchE
+-- ** RWST with CPSed Writer
 , RWST(..)
 , RWS
 , rws
@@ -328,17 +408,23 @@ module Cronus
 , execRWST
 , mapRWST
 , withRWST
+-- ** Functor Combinators
 , Identity(..)
 , Const(..)
 , Sum(..)
 , Product(..)
 , Compose(..)
+-- ** Contravariant Functor
 , Contravariant(..)
+-- ** Unique
 , Unique(..)
 , newUnique
 , hashUnique
+-- ** Version
 , Version(..)
+-- ** Void
 , Void(..)
+-- ** Bitraversable
 , Bitraversable(..)
 , bisequenceA
 , bisequence
@@ -349,8 +435,10 @@ module Cronus
 , bimapAccumR
 , bimapDefault
 , bifoldMapDefault
-, Coercible
+-- ** Data.Coerce
+, Coercible(..)
 , coerce
+-- ** Dynamic
 , Dynamic
 , toDyn
 , fromDyn
@@ -358,13 +446,9 @@ module Cronus
 , dynApply
 , dynApp
 , dynTypeRep
-, catMaybes
-, mapMaybe
-, listToMaybe
-, maybeToList
-, fromMaybe
-, isNothing
-, isJust
+-- ** Either
+, Either(Left, Right)
+, either
 , lefts
 , rights
 , isLeft
@@ -372,22 +456,9 @@ module Cronus
 , fromLeft
 , fromRight
 , partitionEithers
-, foldrM
-, foldlM
-, traverse_
-, for_
-, sequenceA_
-, asum
-, forM_
-, forM
-, msum
-, maximumBy
-, minimumBy
-, find
-, for
-, mapAccumL
-, mapAccumR
+-- ** Ix
 , Ix(..)
+-- ** IORef
 , IORef
 , newIORef
 , readIORef
@@ -398,19 +469,15 @@ module Cronus
 , atomicModifyIORef'
 , atomicWriteIORef
 , mkWeakIORef
-, STRef
-, newSTRef
-, writeSTRef
-, modifySTRef
-, modifySTRef'
+-- ** MonadFix
 , MonadFix(..)
 , fix
+-- ** Arrow Operators
 , (&&&)
 , (***)
-, Kleisli(..)
-, (>>>)
-, (<<<)
+-- ** Bifunctor
 , Bifunctor(..)
+-- ** Profunctor
 , Profunctor(..)
 , Strong(..)
 , Choice(..)
@@ -422,9 +489,11 @@ module Cronus
 , Star(..)
 , Costar(..)
 , Forget(..)
+-- ** Unboxed Vectors
 , Vector
 , MVector
 , Unbox(..)
+-- ** Comonads
 , Comonad(..)
 , liftW
 , wfix
