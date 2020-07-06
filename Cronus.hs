@@ -508,6 +508,30 @@ module Cronus
 , liftW2
 , liftW3
 , Cokleisli(..)
+-- ** Fixed
+, Fixed(..)
+, HasResolution(..)
+, Deci
+, Centi
+, Milli
+, Micro
+, Nano
+, Pico
+-- ** Time
+, UTCTime(..)
+, UniversalTime(..)
+, DiffTime(..)
+, secondsToDiffTime
+, picosecondsToDiffTime
+, diffTimeToPicoseconds
+, NominalDiffTime(..)
+, secondsToNominalDiffTime
+, nominalDiffTimeToSeconds
+, nominalDay
+, addUTCTime
+, diffUTCTime
+, getCurrentTime
+, getTime_resolution
 ) where
 
 import Data.Profunctor
@@ -572,3 +596,5 @@ import Data.STRef
 import Data.Char
 import Data.Vector.Unboxed (Vector, MVector, Unbox(..))
 import Control.Comonad
+import Data.Time.Clock
+import Data.Fixed
